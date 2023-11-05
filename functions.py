@@ -68,7 +68,8 @@ def search_db_entries() -> list:
                        "WHERE Description LIKE '%{0}%' "
                        "OR URL LIKE '%{0}%'").format(keyword)
         for item in db_worker(request_str, 1):
-            found_results.append(item)
+            if item not in found_results:
+                found_results.append(item)
     return found_results
 
 
