@@ -1,7 +1,12 @@
+import os
 import functions
 import crypta
+from colorama import init, Fore, Style
 
 if __name__ == "__main__":
+
+    # Colorama.Initialize() для цветного форматирования в консоли
+    init(autoreset=True)
 
     while True:
         # ОСНОВНОЕ МЕНЮ для работы с парольным менеджером
@@ -50,11 +55,11 @@ if __name__ == "__main__":
                 request_str = f"SELECT URL FROM data WHERE URL = '{site_url}'"
                 # если fetchall() в db_worker возвращает не пустой список, то это повтор
                 if len(functions.db_worker(request_str, 1)) != 0:
-                    print("\nНельзя повторно добавить сайт, данные которого уже есть!\n")
+                    print(Fore.RED + "\nНельзя повторно добавить сайт, данные которого уже есть!\n")
                     continue
 
                 # получить от пользователя почту сайта, но это может быть и не задано
-                site_email = input("Введите email если используется: ")
+                site_email = input(Fore.CYAN+ "Введите email если используется: " + Style.RESET_ALL)
                 # если почта не используется, то сохранить это явно
                 if len(site_email) == 0:
                     site_email = "На этом сайте адрес почты не используется"
@@ -91,7 +96,7 @@ if __name__ == "__main__":
                                     (site_description, site_url,
                                      site_email, site_login, crypto_result[0], crypto_result[1]))
 
-                print("\nИнформация о сайте успешно добавлена!\n")
+                print(Fore.GREEN + "\nИнформация о сайте успешно добавлена!\n")
 
                 del site_email
                 del site_login
@@ -100,6 +105,11 @@ if __name__ == "__main__":
 
             # если пользователь выбрал получение сайта
             elif user_choose == "2":
+                # проверяем, что база с паролями вообще есть,
+                # т.е. до этого был сохранён хотя бы один сайт
+                if not os.path.exists(os.getcwd() + "//pswdmn.db"):
+                    print(Fore.RED + "\nНеобходимо добавить хотя бы один сайт!\n")
+                    continue
                 # спрашиваем у пользователя ключевые слова и ищем по ним
                 found_results = functions.search_db_entries()
 
@@ -119,16 +129,19 @@ if __name__ == "__main__":
                 # запрашиваем мастер пароль у пользователя
                 master_pass = functions.check_master_pass()
                 # дешифруем с этим мастер паролем пароль сайта
-                site_pass = crypta.aes_decryption(found_results[user_choose - 1][5], master_pass,
+                site_pass = crypta.aes_decryption(found_results[user_choose - 1][5],
+                                                  master_pass,
                                                   found_results[user_choose - 1][6])
                 site_pass = site_pass.decode()
 
-                print(f"\nДанные сайта:\nЛогин: {found_results[user_choose - 1][4]} \nПароль: {site_pass} "
-                      f"\nURL сайта: {found_results[user_choose - 1][2]} \nEmail: {found_results[user_choose - 1][3]} \n")
+                print(f"\nДанные сайта:\nЛогин: {found_results[user_choose - 1][4]} "
+                      f"\nПароль: {site_pass} "
+                      f"\nURL сайта: {found_results[user_choose - 1][2]} "
+                      f"\nEmail: {found_results[user_choose - 1][3]} \n")
 
             # если пользователь выбрал редактирование сайта
             elif user_choose == "3":
-                print("\nБудьте внимательны при внесении изменений!")
+                print(Fore.YELLOW + "\nБудьте внимательны при внесении изменений!")
                 print("Выполните поиск сайта, который требуется отредактировать.")
 
                 # спрашиваем у пользователя какой сайт будем редактировать
@@ -163,7 +176,7 @@ if __name__ == "__main__":
 
                 # эти варианты можно просто переписать в БД никак не обрабатывая предварительно
                 if edit_site_value == 1 or edit_site_value == 3 or edit_site_value == 4:
-                    new_site_data = input("Введите новые данные: ")
+                    new_site_data = input(Fore.CYAN + "Введите новые данные: " + Style.RESET_ALL)
                     if edit_site_value == 1:
                         request_str = f"UPDATE data SET Description = ? WHERE Id = {found_results[site_id - 1][0]}"
                     if edit_site_value == 3:
@@ -195,11 +208,11 @@ if __name__ == "__main__":
 
                     functions.db_worker(request_str, 2, (crypto_result[0], crypto_result[1]))
 
-                print("\nДанные сайта успешно обновлены!\n")
+                print(Fore.GREEN + "\nДанные сайта успешно обновлены!\n")
 
             # если пользователь выбрал удаление сайта
             elif user_choose == "4":
-                print("\nУдаление необратимая операция, будьте внимательны!")
+                print(Fore.YELLOW + "\nУдаление необратимая операция, будьте внимательны!")
                 print("Выполните поиск сайта, который требуется удалить.")
 
                 # спрашиваем у пользователя какой сайт будем редактировать
@@ -220,13 +233,13 @@ if __name__ == "__main__":
 
                 request_str = f"DELETE FROM data WHERE Id = {site_id - 1}"
 
-                print("Сайт успешно удалён.\n")
+                print(Fore.GREEN + "Сайт успешно удалён.\n")
 
             # если пользователь выбрал выход
             elif user_choose == "5":
                 break
         except KeyboardInterrupt:
             # если пользователь отменяет своё действие
-            # напечатать пустую строку для удобства и пропустить итерацию
-            print()
+            # напечатать строку для удобства и пропустить итерацию
+            print(Fore.YELLOW + "\nВы прервали операцию нажав Ctrl+C...\n")
             continue

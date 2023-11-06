@@ -1,5 +1,9 @@
-/venv/*
-/__pycache__/*
+/venv/
+/__pycache__/
 /.idea/
+/main.dist/
+/main.build/
+/main.onefile-build/
 network.py
 pswdmn.db
+data-protection.ico

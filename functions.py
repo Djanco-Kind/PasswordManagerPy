@@ -1,6 +1,11 @@
 import re
 import sqlite3
 import crypta
+from colorama import init, Fore, Style
+
+
+# Colorama.Initialize() для цветного форматирования в консоли
+init(autoreset=True)
 
 
 def db_worker(request: str, func_type: int, request_data=()) -> list:
@@ -26,17 +31,19 @@ def check_master_pass() -> str:
     Возвращает введённый мастер пароль.
     """
     while True:
-        master_pass = input("Введите пароль для базы: ")
+        master_pass = input(Fore.CYAN + "Введите мастер пароль для базы: " + Style.RESET_ALL)
         request_str = "SELECT Value FROM secret"
         # если в БД нет хеша мастер пароля, то сохраняем его
         if len(db_worker(request_str, 1)) == 0:
+            print(Fore.YELLOW + "\nВы задали мастер пароль в самый первый раз,"
+                  "\nзапомните его, он нужен для последующего использования парольного менеджера.")
             request_str = "INSERT INTO secret (Value) VALUES(?)"
             db_worker(request_str, 2, (crypta.hash_sha256(master_pass.encode()),))
             break
 
         # иначе сравниваем, что пытаемся шифровать/дешифровать с тем же мастер паролем
         if db_worker(request_str, 1)[0][0] != crypta.hash_sha256(master_pass.encode()):
-            print("\nНеправильный мастер пароль!\n")
+            print(Fore.RED + "\nНеправильный мастер пароль!\n")
             continue
         else:
             break
@@ -76,7 +83,8 @@ def search_db_entries() -> list:
 def search_db_helper(found_results: list) -> bool:
     # если результаты пустые, то пропусти эту итерацию
     if len(found_results) == 0:
-        print("\nРезультатов не найдено, попробуйте поиск с другими ключевыми словами.\n")
+        print(Fore.YELLOW + "\nРезультатов не найдено, "
+                            "попробуйте поиск с другими ключевыми словами.\n")
         return True
     # иначе выведи результаты на печать
     else:
@@ -96,12 +104,12 @@ def check_url_input() -> str:
     pattern = r"^(http|https)://([a-z0-9]+(\.?\-?))+(\.[a-z]{2,5})$"
 
     while True:
-        site_url = str(input("Введите URL адрес сайта, "
-                             "в формате http(s)://site.ru : ")).lower()
+        site_url = str(input(Fore.CYAN + "Введите URL адрес сайта, "
+                             "в формате http(s)://site.ru : " + Style.RESET_ALL)).lower()
         if re.search(pattern, site_url):
             break
         else:
-            print("Неправильный формат URL!")
+            print(Fore.RED + "Неправильный формат URL!")
             continue
 
     return site_url
@@ -115,10 +123,10 @@ def input_helper(hint_for_user: str, hint_invalid_inp: str,
     if input_type == "string":
         while True:
             # запрашиваем пользовательский ввод
-            user_input = input(hint_for_user)
+            user_input = input(Fore.CYAN + hint_for_user + Style.RESET_ALL)
             # вводимая строка не должна быть пустой
             if len(user_input) == 0:
-                print("\n" + hint_invalid_inp + "\n")
+                print(Fore.RED + "\n" + hint_invalid_inp + "\n")
                 continue
             else:
                 break
@@ -127,14 +135,14 @@ def input_helper(hint_for_user: str, hint_invalid_inp: str,
         while True:
             try:
                 # запрашиваем пользовательский ввод
-                user_input = int(input(hint_for_user))
+                user_input = int(input(Fore.CYAN + hint_for_user + Style.RESET_ALL))
             # если возникает ошибка преобразования в целое число
             except ValueError:
-                print("\n" + hint_invalid_inp + "\n")
+                print(Fore.RED + "\n" + hint_invalid_inp + "\n")
                 continue
             # вводимое число должно быть в диапазоне
             if user_input not in input_range:
-                print("\n" + hint_invalid_inp + "\n")
+                print(Fore.RED + "\n" + hint_invalid_inp + "\n")
                 continue
             else:
                 user_input = str(user_input)
