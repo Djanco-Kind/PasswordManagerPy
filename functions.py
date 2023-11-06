@@ -1,3 +1,4 @@
+import random
 import re
 import sqlite3
 import crypta
@@ -148,3 +149,17 @@ def input_helper(hint_for_user: str, hint_invalid_inp: str,
                 user_input = str(user_input)
                 break
         return user_input
+
+
+def pswrd_generator(length: int) -> str:
+    """
+    Генератор пароля заданной длины.
+    """
+    alph = "abcdefghijklmnopqrstuvwxyz"
+    special = "!@#$%?"
+    numbers = "0123456789"
+
+    result = []
+    for i in range(1, length + 1):
+        result.append(random.choice(alph + alph.upper() + numbers + special))
+    return "".join(result)
