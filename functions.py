@@ -1,4 +1,5 @@
-import random
+import datetime
+import secrets as crypto_rnd
 import re
 import sqlite3
 import crypta
@@ -15,7 +16,8 @@ def db_worker(request: str, func_type: int, request_data=()) -> list:
     Запросы по типу INSERT/UPDATE с данными = 2.
     Возвращает список кортежей.
     """
-    with sqlite3.connect("pswdmn.db") as connection:
+    with sqlite3.connect("pswdmn.db",
+                         detect_types=sqlite3.PARSE_DECLTYPES) as connection:
         sql_exec = connection.cursor()
         # для SELECT/CREATE/DELETE
         if func_type == 1:
@@ -161,5 +163,27 @@ def pswrd_generator(length: int) -> str:
 
     result = []
     for i in range(1, length + 1):
-        result.append(random.choice(alph + alph.upper() + numbers + special))
+        result.append(crypto_rnd.choice(alph + alph.upper() + numbers + special))
     return "".join(result)
+
+
+def timedelta_month(then: datetime.date, now: datetime.date) -> int:
+    """
+    Функция определяет целое число месяцев прошедших между двумя датами.
+    Если даты были в разные годы, то хвостовые дни месяцев не суммируются
+    и никак не округляются до месяца, т.к. в разных месяцах разное число дней.
+    """
+    # если две даты в разные годы
+    if now.year > then.year:
+        month = (now.year - then.year - 1) * 12
+        # количество месяцев в then до конца года
+        if then.day == 1:
+            month += 12 - (then.month - 1)
+        else:
+            month += 12 - then.month
+        # количество месяцев в now с начала года
+        month += now.month - 1
+    # если две даты в один и тот же год
+    else:
+        month = now.month - then.month - 1
+    return month

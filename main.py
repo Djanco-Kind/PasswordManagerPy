@@ -1,3 +1,4 @@
+import datetime
 import os
 import functions
 import crypta
@@ -29,12 +30,13 @@ if __name__ == "__main__":
                 # создать таблицу data для сохранения сайтов если ещё не создана
                 request_str = ("CREATE TABLE IF NOT EXISTS data ("
                                "Id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                               "Description TEXT, "
+                               "Description TEXT,"
                                "URL TEXT,"
                                "Email TEXT,"
                                "Login TEXT,"
                                "Pass BLOB,"
-                               "Salt BLOB)")
+                               "Salt BLOB,"
+                               "PasswordDate DATE)")
                 functions.db_worker(request_str, 1)
 
                 # аналогично создать таблицу secret для хеша мастер пароля
@@ -91,11 +93,13 @@ if __name__ == "__main__":
                                "Email,"
                                "Login,"
                                "Pass,"
-                               "Salt) VALUES(?, ?, ?, ?, ?, ?)")
+                               "Salt,"
+                               "PasswordDate) VALUES(?, ?, ?, ?, ?, ?, ?)")
 
                 functions.db_worker(request_str, 2,
                                     (site_description, site_url,
-                                     site_email, site_login, crypto_result[0], crypto_result[1]))
+                                     site_email, site_login, crypto_result[0], crypto_result[1],
+                                     datetime.date.today()))
 
                 print(Fore.GREEN + "\nИнформация о сайте успешно добавлена!\n")
 
@@ -140,6 +144,15 @@ if __name__ == "__main__":
                       f"\nURL сайта: {found_results[user_choose - 1][2]} "
                       f"\nEmail: {found_results[user_choose - 1][3]} \n")
 
+                # определяем как давно пользователь обновлял пароль
+                passMonths = functions.timedelta_month(
+                    found_results[user_choose - 1][7],
+                    datetime.date.today())
+                # если прошло больше 3 месяцев выводим предупреждение
+                if passMonths > 3:
+                    print(Fore.YELLOW + f"Вы обновляли пароль для этого сайта {passMonths} месяцев назад\n"
+                                        "Для безопасности рекомендуется обновить Ваш пароль.\n")
+
             # если пользователь выбрал редактирование сайта
             elif user_choose == "3":
                 print(Fore.YELLOW + "\nБудьте внимательны при внесении изменений!")
@@ -179,17 +192,21 @@ if __name__ == "__main__":
                 if edit_site_value == 1 or edit_site_value == 3 or edit_site_value == 4:
                     new_site_data = input(Fore.CYAN + "Введите новые данные: " + Style.RESET_ALL)
                     if edit_site_value == 1:
-                        request_str = f"UPDATE data SET Description = ? WHERE Id = {found_results[site_id - 1][0]}"
+                        request_str = (f"UPDATE data SET Description = ? "
+                                       f"WHERE Id = {found_results[site_id - 1][0]}")
                     if edit_site_value == 3:
-                        request_str = f"UPDATE data SET Email = ? WHERE Id = {found_results[site_id - 1][0]}"
+                        request_str = (f"UPDATE data SET Email = ? "
+                                       f"WHERE Id = {found_results[site_id - 1][0]}")
                     if edit_site_value == 4:
-                        request_str = f"UPDATE data SET Login = ? WHERE Id = {found_results[site_id - 1][0]}"
+                        request_str = (f"UPDATE data SET Login = ? "
+                                       f"WHERE Id = {found_results[site_id - 1][0]}")
                     functions.db_worker(request_str, 2, (new_site_data,))
 
                 # URL требует проверки на соответствие формату http(s)://бла-бла.домен
                 elif edit_site_value == 2:
                     site_url = functions.check_url_input()
-                    request_str = "UPDATE data SET URL = ? WHERE Id = {0}".format(found_results[site_id - 1][0])
+                    request_str = ("UPDATE data SET URL = ? "
+                                   "WHERE Id = {0}").format(found_results[site_id - 1][0])
                     functions.db_worker(request_str, 2, (site_url,))
 
                 # новый пароль требуется предварительно зашифровать
@@ -205,9 +222,11 @@ if __name__ == "__main__":
 
                     # шифруем новый пароль сайта с мастер паролем AES-128
                     crypto_result = crypta.aes_encryption(site_pass.encode(), master_pass)
-                    request_str = f"UPDATE data SET Pass = ?, Salt = ? WHERE Id = {found_results[site_id - 1][0]}"
+                    request_str = (f"UPDATE data SET Pass = ?, Salt = ?, PasswordDate = ? "
+                                   f"WHERE Id = {found_results[site_id - 1][0]}")
 
-                    functions.db_worker(request_str, 2, (crypto_result[0], crypto_result[1]))
+                    functions.db_worker(request_str, 2,
+                                        (crypto_result[0], crypto_result[1], datetime.date.today()))
 
                 print(Fore.GREEN + "\nДанные сайта успешно обновлены!\n")
 
@@ -245,7 +264,8 @@ if __name__ == "__main__":
                     "number",
                     range(8, 129)
                 )
-                print(f"\nСгенерированный пароль: {functions.pswrd_generator(int(pass_length))}\n")
+                print(f"\nСгенерированный пароль: "
+                      f"{functions.pswrd_generator(int(pass_length))}\n")
 
             # если пользователь выбрал выход
             elif user_choose == "6":
