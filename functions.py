@@ -9,6 +9,11 @@ from colorama import init, Fore, Style
 # Colorama.Initialize() для цветного форматирования в консоли
 init(autoreset=True)
 
+def to_lower_sqlite(str):
+    """
+    Функция перевода в нижний регистр для sqlite
+    """
+    return str.lower()
 
 def db_worker(request: str, func_type: int, request_data=()) -> list:
     """
@@ -16,8 +21,10 @@ def db_worker(request: str, func_type: int, request_data=()) -> list:
     Запросы по типу INSERT/UPDATE с данными = 2.
     Возвращает список кортежей.
     """
+    # PARSE_DECLTYPES нужна для автоматического определения типов
     with sqlite3.connect("pswdmn.db",
                          detect_types=sqlite3.PARSE_DECLTYPES) as connection:
+        connection.create_function("lower", 1, to_lower_sqlite)
         sql_exec = connection.cursor()
         # для SELECT/CREATE/DELETE
         if func_type == 1:
@@ -75,7 +82,7 @@ def search_db_entries() -> list:
     found_results = []
     for keyword in user_keywords:
         request_str = ("SELECT * FROM data "
-                       "WHERE Description LIKE '%{0}%' "
+                       "WHERE lower(Description) LIKE '%{0}%' "
                        "OR URL LIKE '%{0}%'").format(keyword)
         for item in db_worker(request_str, 1):
             if item not in found_results:
@@ -94,7 +101,7 @@ def search_db_helper(found_results: list) -> bool:
         print("\nНайдены следующие сайты:\n")
         for index, result in enumerate(found_results):
             # в формате: индекс описание URL Логин: ****** Пароль: ******
-            print(f"({index + 1}) - {result[1]} {result[2]} Логин: ****** Пароль: ******")
+            print(f"({index + 1}) - {result[1]} {result[2]} Логин: {result[4]} Пароль: ******")
             if index == len(found_results) - 1:
                 print()
         return False
@@ -105,11 +112,12 @@ def check_url_input() -> str:
     Функция проверки вводимого URL с помощью regex.
     """
     pattern = r"^(http|https)://([a-z0-9]+(\.?\-?))+(\.[a-z]{2,5})$"
+    pattern2 = r"^(http|https)://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
 
     while True:
         site_url = str(input(Fore.CYAN + "Введите URL адрес сайта, "
-                             "в формате http(s)://site.ru : " + Style.RESET_ALL)).lower()
-        if re.search(pattern, site_url):
+                             "в формате http(s)://site.ru или http(s)://IP_адрес: " + Style.RESET_ALL)).lower()
+        if re.search(pattern, site_url) or re.search(pattern2, site_url):
             break
         else:
             print(Fore.RED + "Неправильный формат URL!")
@@ -153,16 +161,23 @@ def input_helper(hint_for_user: str, hint_invalid_inp: str,
         return user_input
 
 
-def pswrd_generator(length: int) -> str:
+def pswrd_generator() -> str:
     """
     Генератор пароля заданной длины.
     """
+    pass_length = int(input_helper(
+        "Введите длину пароля: ",
+        "Недопустимая длина."
+        "\nДлина должна быть в диапазоне 8 - 128 символов",
+        "number",
+        range(8, 129)
+    ))
     alph = "abcdefghijklmnopqrstuvwxyz"
     special = "!@#$%?"
     numbers = "0123456789"
 
     result = []
-    for i in range(1, length + 1):
+    for i in range(1, pass_length + 1):
         result.append(crypto_rnd.choice(alph + alph.upper() + numbers + special))
     return "".join(result)
 

@@ -55,14 +55,14 @@ if __name__ == "__main__":
 
                 # проверять, что пользователь не пытается добавить сайт повторно
                 # один сайт = один аккаунт
-                request_str = f"SELECT URL FROM data WHERE URL = '{site_url}'"
+                # request_str = f"SELECT URL FROM data WHERE URL = '{site_url}'"
                 # если fetchall() в db_worker возвращает не пустой список, то это повтор
-                if len(functions.db_worker(request_str, 1)) != 0:
-                    print(Fore.RED + "\nНельзя повторно добавить сайт, данные которого уже есть!\n")
-                    continue
+                # if len(functions.db_worker(request_str, 1)) != 0:
+                #     print(Fore.RED + "\nНельзя повторно добавить сайт, данные которого уже есть!\n")
+                #     continue
 
                 # получить от пользователя почту сайта, но это может быть и не задано
-                site_email = input(Fore.CYAN+ "Введите email если используется: " + Style.RESET_ALL)
+                site_email = input(Fore.CYAN + "Введите email если используется: " + Style.RESET_ALL)
                 # если почта не используется, то сохранить это явно
                 if len(site_email) == 0:
                     site_email = "На этом сайте адрес почты не используется"
@@ -150,8 +150,16 @@ if __name__ == "__main__":
                     datetime.date.today())
                 # если прошло больше 3 месяцев выводим предупреждение
                 if passMonths > 3:
-                    print(Fore.YELLOW + f"Вы обновляли пароль для этого сайта {passMonths} месяцев назад\n"
+                    # проверить работу этого куска
+                    print(Fore.YELLOW + f"Вы обновляли пароль для этого сайта {passMonths} месяцев назад.\n"
                                         "Для безопасности рекомендуется обновить Ваш пароль.\n")
+                    user_choose = functions.input_helper(
+                        "Хотите сгенерировать новый пароль? Да - 1/Нет - 0 :",
+                        "Выберите Да = 1 или Нет = 0",
+                        "number",
+                        range(0, 2))
+                    if user_choose == "1":
+                        functions.pswrd_generator()
 
             # если пользователь выбрал редактирование сайта
             elif user_choose == "3":
@@ -212,7 +220,7 @@ if __name__ == "__main__":
                 # новый пароль требуется предварительно зашифровать
                 elif edit_site_value == 5:
                     site_pass = functions.input_helper(
-                        "Введите пароль для сайта: ",
+                        "Введите новый пароль для сайта: ",
                         "Пароль не может быть пустой строкой!",
                         "string"
                     )
@@ -257,15 +265,9 @@ if __name__ == "__main__":
 
             # если пользователь выбрал создать пароль
             elif user_choose == "5":
-                pass_length = functions.input_helper(
-                    "Введите длину пароля: ",
-                    "Недопустимая длина."
-                    "\nДлина должна быть в диапазоне 8 - 128 символов",
-                    "number",
-                    range(8, 129)
-                )
+                # проверить работу этого куска
                 print(f"\nСгенерированный пароль: "
-                      f"{functions.pswrd_generator(int(pass_length))}\n")
+                      f"{functions.pswrd_generator()}\n")
 
             # если пользователь выбрал выход
             elif user_choose == "6":
