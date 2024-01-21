@@ -1,5 +1,6 @@
 import datetime
 import os
+import ctypes
 import functions
 import crypta
 from colorama import init, Fore, Style
@@ -17,11 +18,13 @@ if __name__ == "__main__":
              "(3) - Отредактировать информацию о сайте\n"
              "(4) - Удалить информацию о сайте\n"
              "(5) - Сгенерировать пароль\n"
-             "(6) - Выход\n"
+             "(6) - Очистить вывод\n"
+             "(7) - Синхронизация через Google Drive\n"
+             "(8) - Выход\n"
              "Введите номер действия: "),
             "Действия с таким номером не существует!",
             "number",
-            range(1, 7)
+            range(1, 9)
         )
 
         try:
@@ -36,12 +39,13 @@ if __name__ == "__main__":
                                "Login TEXT,"
                                "Pass BLOB,"
                                "Salt BLOB,"
-                               "PasswordDate DATE)")
-                functions.db_worker(request_str, 1)
+                               "PasswordDate DATE,"
+                               "ModificationTime INTEGER)")
+                functions.db_worker("pswdmn.db", request_str, 1)
 
-                # аналогично создать таблицу secret для хеша мастер пароля
-                request_str = "CREATE TABLE IF NOT EXISTS secret (Value TEXT)"
-                functions.db_worker(request_str, 1)
+                # аналогично создать таблицу control для хеша мастер пароля и штампа времени синхронизации
+                request_str = "CREATE TABLE IF NOT EXISTS control (Value TEXT, Value2 INTEGER)"
+                functions.db_worker("pswdmn.db", request_str, 1)
 
                 # получить от пользователя описание сохраняемого сайта
                 site_description = functions.input_helper(
@@ -50,18 +54,11 @@ if __name__ == "__main__":
                     "string"
                 )
 
-                # получить от пользователя URL сайта в формате http(s)://бла-бла.домен
+                # получить от пользователя URL сайта
+                # в формате http(s)://бла-бла.домен или http(s)://ip_address
                 site_url = functions.check_url_input()
 
-                # проверять, что пользователь не пытается добавить сайт повторно
-                # один сайт = один аккаунт
-                # request_str = f"SELECT URL FROM data WHERE URL = '{site_url}'"
-                # если fetchall() в db_worker возвращает не пустой список, то это повтор
-                # if len(functions.db_worker(request_str, 1)) != 0:
-                #     print(Fore.RED + "\nНельзя повторно добавить сайт, данные которого уже есть!\n")
-                #     continue
-
-                # получить от пользователя почту сайта, но это может быть и не задано
+                # получить от пользователя почту для сайта, но это может быть и не задано
                 site_email = input(Fore.CYAN + "Введите email если используется: " + Style.RESET_ALL)
                 # если почта не используется, то сохранить это явно
                 if len(site_email) == 0:
@@ -73,6 +70,7 @@ if __name__ == "__main__":
                     "Логин не может быть пустой строкой!",
                     "string"
                 )
+
                 # получить от пользователя ввод пароля сайта
                 site_pass = functions.input_helper(
                     "Введите пароль для сайта: ",
@@ -86,6 +84,9 @@ if __name__ == "__main__":
                 # шифрование пользовательского пароля сайта с мастер паролем AES-128
                 crypto_result = crypta.aes_encryption(site_pass.encode(), master_pass)
 
+                # Epoch штамп времени, когда модифицировалась эта запись
+                mod_epoch = int(datetime.datetime.now().timestamp())
+
                 # занесение информации о сайте в БД
                 request_str = ("INSERT INTO data ("
                                "Description,"
@@ -94,33 +95,29 @@ if __name__ == "__main__":
                                "Login,"
                                "Pass,"
                                "Salt,"
-                               "PasswordDate) VALUES(?, ?, ?, ?, ?, ?, ?)")
+                               "PasswordDate,"
+                               "ModificationTime) VALUES(?, ?, ?, ?, ?, ?, ?, ?)")
 
-                functions.db_worker(request_str, 2,
+                functions.db_worker("pswdmn.db", request_str, 2,
                                     (site_description, site_url,
                                      site_email, site_login, crypto_result[0], crypto_result[1],
-                                     datetime.date.today()))
+                                     datetime.date.today(), mod_epoch))
 
                 print(Fore.GREEN + "\nИнформация о сайте успешно добавлена!\n")
-
-                del site_email
-                del site_login
-                del site_pass
-                del master_pass
 
             # если пользователь выбрал получение сайта
             elif user_choose == "2":
                 # проверяем, что база с паролями вообще есть,
                 # т.е. до этого был сохранён хотя бы один сайт
-                if not os.path.exists(os.getcwd() + "//pswdmn.db"):
-                    print(Fore.RED + "\nНеобходимо добавить хотя бы один сайт!\n")
+                if functions.db_not_exists():
                     continue
+
                 # спрашиваем у пользователя ключевые слова и ищем по ним
                 found_results = functions.search_db_entries()
 
-                # если результаты пустые search_db_helper вернёт True
+                # если результаты пустые print_found_in_db вернёт True
                 # если результаты не пустые, то он напечатает их
-                if functions.search_db_helper(found_results):
+                if functions.print_found_in_db(found_results):
                     continue
 
                 # получаем расшифровку пароля и логин для определённого результата
@@ -150,28 +147,37 @@ if __name__ == "__main__":
                     datetime.date.today())
                 # если прошло больше 3 месяцев выводим предупреждение
                 if passMonths > 3:
-                    # проверить работу этого куска
                     print(Fore.YELLOW + f"Вы обновляли пароль для этого сайта {passMonths} месяцев назад.\n"
                                         "Для безопасности рекомендуется обновить Ваш пароль.\n")
                     user_choose = functions.input_helper(
-                        "Хотите сгенерировать новый пароль? Да - 1/Нет - 0 :",
+                        "Хотите сгенерировать новый пароль? Да - 1/Нет - 0 : ",
                         "Выберите Да = 1 или Нет = 0",
                         "number",
                         range(0, 2))
                     if user_choose == "1":
-                        functions.pswrd_generator()
+                        new_pass = functions.pswrd_generator()
+                        print(f"\nСгенерированный пароль: {new_pass}\n")
+                        print(Fore.YELLOW + f"После смены пароля на сайте "
+                                            f"не забудьте обновить его здесь, через опцию (3).\n")
+                    else:
+                        print("\n")
 
             # если пользователь выбрал редактирование сайта
             elif user_choose == "3":
+                # проверяем, что база с паролями вообще есть,
+                # т.е. до этого был сохранён хотя бы один сайт
+                if functions.db_not_exists():
+                    continue
+
                 print(Fore.YELLOW + "\nБудьте внимательны при внесении изменений!")
                 print("Выполните поиск сайта, который требуется отредактировать.")
 
                 # спрашиваем у пользователя какой сайт будем редактировать
                 found_results = functions.search_db_entries()
 
-                # если результаты пустые search_db_helper вернёт True
+                # если результаты пустые print_found_in_db вернёт True
                 # если результаты не пустые, то он напечатает их
-                if functions.search_db_helper(found_results):
+                if functions.print_found_in_db(found_results):
                     continue
 
                 # спрашиваем какую запись будем редактировать
@@ -185,40 +191,29 @@ if __name__ == "__main__":
                 # спрашиваем что именно будем редактировать в записи сайта
                 edit_site_value = int(functions.input_helper(
                     ("\nЧто именно требуется изменить для этого сайта?:\n"
-                     "\n(1) - Описание\n"
-                     "(2) - URL\n"
-                     "(3) - Email\n"
-                     "(4) - Логин\n"
-                     "(5) - Пароль\n"
+                     "(1) - Email\n"
+                     "(2) - Логин\n"
+                     "(3) - Пароль\n"
                      "\nВведите номер действия: "),
                     "Действия с таким номером нет!",
                     "number",
-                    range(1, 6)
+                    range(1, 4)
                 ))
 
                 # эти варианты можно просто переписать в БД никак не обрабатывая предварительно
-                if edit_site_value == 1 or edit_site_value == 3 or edit_site_value == 4:
+                request_str = ""
+                if edit_site_value == 1 or edit_site_value == 2:
                     new_site_data = input(Fore.CYAN + "Введите новые данные: " + Style.RESET_ALL)
                     if edit_site_value == 1:
-                        request_str = (f"UPDATE data SET Description = ? "
-                                       f"WHERE Id = {found_results[site_id - 1][0]}")
-                    if edit_site_value == 3:
                         request_str = (f"UPDATE data SET Email = ? "
                                        f"WHERE Id = {found_results[site_id - 1][0]}")
-                    if edit_site_value == 4:
+                    if edit_site_value == 2:
                         request_str = (f"UPDATE data SET Login = ? "
                                        f"WHERE Id = {found_results[site_id - 1][0]}")
-                    functions.db_worker(request_str, 2, (new_site_data,))
-
-                # URL требует проверки на соответствие формату http(s)://бла-бла.домен
-                elif edit_site_value == 2:
-                    site_url = functions.check_url_input()
-                    request_str = ("UPDATE data SET URL = ? "
-                                   "WHERE Id = {0}").format(found_results[site_id - 1][0])
-                    functions.db_worker(request_str, 2, (site_url,))
+                    functions.db_worker("pswdmn.db", request_str, 2, (new_site_data,))
 
                 # новый пароль требуется предварительно зашифровать
-                elif edit_site_value == 5:
+                elif edit_site_value == 3:
                     site_pass = functions.input_helper(
                         "Введите новый пароль для сайта: ",
                         "Пароль не может быть пустой строкой!",
@@ -233,13 +228,22 @@ if __name__ == "__main__":
                     request_str = (f"UPDATE data SET Pass = ?, Salt = ?, PasswordDate = ? "
                                    f"WHERE Id = {found_results[site_id - 1][0]}")
 
-                    functions.db_worker(request_str, 2,
+                    functions.db_worker("pswdmn.db", request_str, 2,
                                         (crypto_result[0], crypto_result[1], datetime.date.today()))
+                # после внесения изменений переопределяем значение ModificationTime
+                mod_epoch = int(datetime.datetime.now().timestamp())
+                request_str = f"UPDATE data SET ModificationTime = ? WHERE Id = {found_results[site_id - 1][0]}"
+                functions.db_worker("pswdmn.db", request_str, 2,(mod_epoch,))
 
                 print(Fore.GREEN + "\nДанные сайта успешно обновлены!\n")
 
             # если пользователь выбрал удаление сайта
             elif user_choose == "4":
+                # проверяем, что база с паролями вообще есть,
+                # т.е. до этого был сохранён хотя бы один сайт
+                if functions.db_not_exists():
+                    continue
+
                 print(Fore.YELLOW + "\nУдаление необратимая операция, будьте внимательны!")
                 print("Выполните поиск сайта, который требуется удалить.")
 
@@ -248,7 +252,7 @@ if __name__ == "__main__":
 
                 # если результаты пустые search_db_helper вернёт True
                 # если результаты не пустые, то он напечатает их
-                if functions.search_db_helper(found_results):
+                if functions.print_found_in_db(found_results):
                     continue
 
                 # спрашиваем какой сайт будем удалять
@@ -265,15 +269,39 @@ if __name__ == "__main__":
 
             # если пользователь выбрал создать пароль
             elif user_choose == "5":
-                # проверить работу этого куска
                 print(f"\nСгенерированный пароль: "
                       f"{functions.pswrd_generator()}\n")
 
-            # если пользователь выбрал выход
+            # если выбрали очистку экрана
             elif user_choose == "6":
+                if os.name == "nt":
+                    """
+                    Команда cls выполниться не в текущем shell, а в subshell.
+                    В текущем shell, где выполняется программа Python также произойдёт
+                    очистка консоли, т.к.: "If command generates any output,
+                    it will be sent to the interpreter standard output stream".
+                    """
+                    os.system("cls")
+                    # Загрузка библиотеки C++, которая отправит текущему окну
+                    # сочетание клавиш ALT F7 для очистки истории команд
+                    mylib = ctypes.CDLL("altF7.dll")
+                    # Вызов функции отправки сочетания клавиш
+                    mylib.sendKeyPress()
+
+            # если пользователь выбрал синхронизацию
+            elif user_choose == "7":
+                # вызываем синхронизацию
+                functions.sync_db()
+
+            # если пользователь выбрал выход
+            elif user_choose == "8":
                 break
+
         except KeyboardInterrupt:
             # если пользователь отменяет своё действие
             # напечатать строку для удобства и пропустить итерацию
             print(Fore.YELLOW + "\nВы прервали операцию нажав Ctrl+C...\n")
+            continue
+        except Exception as e:
+            print(Fore.RED + f"\nВозникла непредвиденная ошибка: {str(e)}\n")
             continue

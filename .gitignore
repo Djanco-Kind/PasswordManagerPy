@@ -3,7 +3,5 @@
 /.idea/
 /main.dist/
 /main.build/
-/main.onefile-build/
-network.py
 pswdmn.db
 data-protection.ico
