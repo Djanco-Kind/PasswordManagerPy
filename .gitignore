@@ -1,5 +1,6 @@
 /venv/
 /__pycache__/
+/sources/__pycache__/
 /.idea/
 /main.dist/
 /main.build/
