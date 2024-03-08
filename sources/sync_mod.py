@@ -71,10 +71,10 @@ def sync_db_main():
             print(Fore.RED + _("\nКлиент Google Drive не найден, проверьте путь в файле data\\config\\settings.ini\n"))
             return
 
-        # получаем из конфига в какую папку на GDRive выгрузить шифрованную базу
-        gdrive_path = config_read_helper("SyncViaGoogle", "syncfolder")
         # возвращаемся в папку с исполняемым файлом программы
         os.chdir(exe_folder)
+        # получаем из конфига в какую папку на GDRive выгрузить шифрованную базу
+        gdrive_path = config_read_helper("SyncViaGoogle", "syncfolder")
 
         # если выбрали выгрузить копию БД на GDrive для последующей синхронизации
         if selected_action == "1":
