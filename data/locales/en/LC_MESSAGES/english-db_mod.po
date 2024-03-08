@@ -1,0 +1,49 @@
+# ENGLISH TRANSLATION FOR PasswordManager - db module.
+# Copyright (C) 2024 Herman
+
+msgid ""
+msgstr ""
+
+"POT-Creation-Date: 2024-02-28 19:51+0300\n"
+"Last-Translator: Herman\n"
+"Language-Team: English"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: db_mod.py:52
+msgid ""
+"\n"
+"Введите ключевые слова, либо URL для поиска.\n"
+"Для разделения ключевых слов используйте запятые (логическое ИЛИ): "
+msgstr ""
+"\n"
+"Enter keywords or URL address for search.\n"
+"Use a comma for separate multiple keywords (it works as logic OR): "
+
+#: db_mod.py:54
+msgid "Пустой ввод недопустим, укажите ключевые слова!"
+msgstr "Empty input is unacceptable, please, specify keywords!"
+
+#: db_mod.py:81
+msgid ""
+"\n"
+"Результатов не найдено, попробуйте поиск с другими ключевыми словами.\n"
+msgstr ""
+"\n"
+"Nothing was found, please try again with different keywords.\n"
+
+#: db_mod.py:101
+msgid "Логин: {:<"
+msgstr "Login: {:<"
+
+#: db_mod.py:103
+msgid ""
+"\n"
+"Найдены следующие сайты:\n"
+msgstr ""
+"\n"
+"The following was found:\n"
+

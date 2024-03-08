@@ -1,0 +1,88 @@
+# ENGLISH TRANSLATION FOR PasswordManager - input_output module.
+# Copyright (C) 2024 Herman
+
+msgid ""
+msgstr ""
+
+"POT-Creation-Date: 2024-02-29 12:42+0300\n"
+"Last-Translator: Herman\n"
+"Language-Team: English"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: sync_mod.py:47
+msgid ""
+"\n"
+"Выберите необходимое действие: \n"
+"(1) - Выгрузить шифрованную копию на Google Drive \n"
+"(2) - Получить шифрованную копию с Google Drive \n"
+"Введите номер действия: "
+msgstr ""
+"\n"
+"Choose required action: \n"
+"(1) - Upload encrypted DB copy to Google Drive \n"
+"(2) - Download encrypted DB copy from Google Drive \n"
+"Enter action number: "
+
+#: sync_mod.py:51
+msgid "Действия с таким номером не существует!"
+msgstr "There is no action with this number!"
+
+#: sync_mod.py:70
+msgid ""
+"\n"
+"Клиент Google Drive не найден, проверьте путь в файле data\\config\\settings.ini\n"
+msgstr ""
+"\n"
+"Google Drive not found, check specified path in data\\config\\settings.ini\n"
+
+#: sync_mod.py:95
+msgid ""
+"\n"
+"Шифрованный файл базы данных успешно синхронизирован с Google Drive\n"
+msgstr ""
+"\n"
+"Encrypted DB successfully uploaded to Google Drive\n"
+
+#: sync_mod.py:122
+msgid ""
+"\n"
+"Введён неправильный мастер пароль. Повторите попытку.\n"
+msgstr ""
+"\n"
+"Wrong master password!\n"
+
+#: sync_mod.py:128
+msgid ""
+"Копия повреждена, не совпадают хеши.\n"
+msgstr ""
+"DB corrupted, hash mismatch.\n"
+
+#: sync_mod.py:197
+msgid ""
+"\n"
+"Синхронизация успешно завершена!\n"
+msgstr ""
+"\n"
+"Synchronization successful!\n"
+
+#: sync_mod.py:200
+msgid ""
+"\n"
+"Не найдены копии в папке Google Drive, синхронизация невозможна.\n"
+"Сначала выполните выгрузку шифрованной копии.\n"
+msgstr ""
+"\n"
+"Synchronization is not possible as there is no encrypted DB in the Google Drive folder.\n"
+
+#: sync_mod.py:203
+msgid ""
+"\n"
+"Ошибка. Потерян файл конфигурации settings.ini, проверьте файл в папке data\\config\n"
+msgstr ""
+"\n"
+"File settings.ini not found, check it in folder data\\config\n"
+

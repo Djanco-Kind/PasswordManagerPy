@@ -1,18 +1,24 @@
 import os
-import time
-import configparser
-import subprocess
+from time import sleep
+from subprocess import Popen, STDOUT
 from colorama import init, Fore, Style
 from sources.db_mod import db_worker
-from sources.input_mod import input_helper
+from sources.input_output_mod import input_helper
+from sources.config_mod import config_read_helper
 from sources.security_mod import check_master_pass, hash_sha256, aes_decryption, aes_encryption
+from sources.localization_mod import select_language
 
+"""
+Этот модуль содержит логику для синхронизации файла паролей через Google Drive.
+"""
 
 # Colorama.Initialize() для цветного форматирования в консоли
 init(autoreset=True)
 
+_ = select_language("english-sync_mod")
 
-def _sync_db_check_changes_helper(key_field: str):
+
+def sync_db_check_changes_helper(key_field: str):
     request_str = (f"SELECT DISTINCT * FROM data, temp WHERE temp.Description = data.Description"
                    f" AND temp.{key_field} = data.{key_field} AND temp.URL = data.URL")
     db_request_data = db_worker(".//data//pswdmn.db", request_str, 1)
@@ -35,23 +41,21 @@ def _sync_db_check_changes_helper(key_field: str):
                 db_worker(".//data//pswdmn.db", request_str, 2,
                           (db_request_data[record_indx][12],) + db_request_data[record_indx][14:])
             request_str = f"Delete From temp Where Id = {db_request_data[record_indx][9]}"
-            db_worker(".//data//pswdmn.db",request_str, 1)
+            db_worker(".//data//pswdmn.db", request_str, 1)
 
 
 def sync_db_main():
-    selected_action = input_helper(("\nВыберете необходимое действие: \n"
-                                    "(1) - Выгрузить шифрованную копию на Google Drive \n"
-                                    "(2) - Получить шифрованную копию с Google Drive \n"
-                                    "Введите номер действия: "),
-                                   "Действия с таким номером не существует!",
+    selected_action = input_helper(_("\nВыберите необходимое действие: \n"
+                                     "(1) - Выгрузить шифрованную копию на Google Drive \n"
+                                     "(2) - Получить шифрованную копию с Google Drive \n"
+                                     "Введите номер действия: "),
+                                   _("Действия с таким номером не существует!"),
                                    "number",
                                    range(1, 3))
 
     # открываем конфиг файл и считываем путь до установленного клиента GDrive
-    if os.path.isfile(os.getcwd() + "//data//config//sync.ini"):
-        config = configparser.ConfigParser()
-        config.read(os.getcwd() + "//data//config//sync.ini")
-        gdrive_path = config.get("SyncViaGoogle", "executable")
+    if os.path.isfile(os.getcwd() + "//data//config//settings.ini"):
+        gdrive_path = config_read_helper("SyncViaGoogle", "executable")
 
         # запоминаем текущую папку и переходим в папку с клиентом GDrive
         exe_folder = os.getcwd()
@@ -60,15 +64,15 @@ def sync_db_main():
         if os.path.isfile("GoogleDriveFS.exe"):
             # запускаем клиента GDrive
             with open(os.devnull, "w") as f:
-                subprocess.Popen(["GoogleDriveFS.exe"], stdout=f, stderr=subprocess.STDOUT)
+               Popen(["GoogleDriveFS.exe"], stdout=f, stderr=STDOUT)
             # ждём 3 секунды пока он запустится
-            time.sleep(3)
+            sleep(3)
         else:
-            print(Fore.RED + "\nКлиент Google Drive не найден, проверьте путь в файле data\\config\\sync.ini\n")
+            print(Fore.RED + _("\nКлиент Google Drive не найден, проверьте путь в файле data\\config\\settings.ini\n"))
             return
 
         # получаем из конфига в какую папку на GDRive выгрузить шифрованную базу
-        gdrive_path = config.get("SyncViaGoogle", "syncfolder")
+        gdrive_path = config_read_helper("SyncViaGoogle", "syncfolder")
         # возвращаемся в папку с исполняемым файлом программы
         os.chdir(exe_folder)
 
@@ -89,7 +93,7 @@ def sync_db_main():
                 db_file_sync.write(db_binary[0])
             with open(gdrive_path + "\\pswdmn.db.salt", "wb") as db_file_sync:
                 db_file_sync.write(db_binary[1])
-            print(Fore.GREEN + "\nШифрованный файл базы данных успешно синхронизирован с Google Drive\n")
+            print(Fore.GREEN + _("\nШифрованный файл базы данных успешно синхронизирован с Google Drive\n"))
 
         # если выбрали получить файл с GDrive и выполнить синхронизацию
         else:
@@ -108,18 +112,21 @@ def sync_db_main():
                 # запрашиваем ввод мастер пароля
                 # затем дешифруем файл с прочитанной солью и введённым мастер паролем
                 while True:
+                    # для запроса мастер пароля не используется security_mod.check_master_pass()
+                    # т.к. этот метод проверяет пароль на основе хеша из БД, при первоначальном
+                    # использовании менеджера хеша мастер пароля и самой базы может не быть.
                     master_pass = input(Fore.CYAN + "Введите мастер пароль для базы: " + Style.RESET_ALL)
                     # здесь возникнет исключение если был введён неправильный пароль
                     try:
                         db_binary = aes_decryption(db_binary, master_pass, db_salt)
                     except:
-                        print(Fore.RED + "\nВведён неправильный мастер пароль. Повторите попытку.\n")
+                        print(Fore.RED + _("\nВведён неправильный мастер пароль. Повторите попытку.\n"))
                     else:
                         break
                 # если файл успешно расшифрован, то проверить для подстраховки его хеш с хешем оригинала
                 db_hash_after_decrypt = hash_sha256(db_binary)
                 if db_hash_origin != db_hash_after_decrypt:
-                    print(Fore.RED + "Копия повреждена, не совпадают хеши.\n")
+                    print(Fore.RED + _("Копия повреждена, не совпадают хеши.\n"))
                 else:
                     # записываем расшифрованную из Google Drive копию в файл
                     with open(os.getcwd() + "//data//pswdmn.db.temp", "wb") as db_file_sync:
@@ -164,8 +171,8 @@ def sync_db_main():
                         # выбираем все записи из temp у которых Description, URL + Email/Login совпадают
                         # с записями из основной таблицы
                         # такие записи являются записями для одного и того же сайта
-                        _sync_db_check_changes_helper("Email")
-                        _sync_db_check_changes_helper("Login")
+                        sync_db_check_changes_helper("Email")
+                        sync_db_check_changes_helper("Login")
 
                         # выбираем все уникальные записи из temp и переносим в основную таблицу data
                         request_str = ("SELECT DISTINCT Description, URL, Email, Login, Pass, Salt, PasswordDate, "
@@ -188,10 +195,10 @@ def sync_db_main():
                         db_worker(".//data//pswdmn.db", request_str, 1)
                         os.remove(".//data//pswdmn.db.temp")
 
-                    print(Fore.GREEN + "\nСинхронизация успешно завершена!\n")
+                    print(Fore.GREEN + _("\nСинхронизация успешно завершена!\n"))
 
             else:
-                print(Fore.YELLOW + "\nНе найдены копии в папке Google Drive, синхронизация невозможна.\n"
-                                    "Сначала выполните выгрузку шифрованной копии.\n")
+                print(Fore.YELLOW + _("\nНе найдены копии в папке Google Drive, синхронизация невозможна.\n"
+                                      "Сначала выполните выгрузку шифрованной копии.\n"))
     else:
-        print(Fore.RED + "\nОшибка. Потерян файл конфигурации sync.ini, проверьте папку data\\config\n")
+        print(Fore.RED + _("\nОшибка. Потерян файл конфигурации settings.ini, проверьте файл в папке data\\config\n"))

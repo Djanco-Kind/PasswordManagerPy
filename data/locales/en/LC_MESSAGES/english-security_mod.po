@@ -1,0 +1,75 @@
+# ENGLISH TRANSLATION FOR PasswordManager - input_output module.
+# Copyright (C) 2024 Herman
+
+msgid ""
+msgstr ""
+
+"POT-Creation-Date: 2024-02-29 13:52+0300\n"
+"Last-Translator: Herman\n"
+"Language-Team: English"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: security_mod.py:70
+msgid "Введите длину пароля: "
+msgstr "Enter password length: "
+
+#: security_mod.py:71
+msgid ""
+"Недопустимая длина.\n"
+"Длина должна быть в диапазоне 8 - 128 символов"
+msgstr ""
+"Unacceptable length.\n"
+"Length should be in the range of 8 - 128 symbols"
+
+#: security_mod.py:93
+msgid "Введите мастер пароль для базы: "
+msgstr "Enter master password: "
+
+#: security_mod.py:100
+msgid ""
+"\n"
+"Вы задали мастер пароль в самый первый раз,\n"
+"запомните его, он нужен для последующего использования парольного менеджера."
+msgstr ""
+"\n"
+"Upon initially setting up,\n"
+"please, remember the master password for future use."
+
+#: security_mod.py:108
+msgid ""
+"\n"
+"Неправильный мастер пароль!\n"
+msgstr ""
+"\n"
+"Wrong master password!\n"
+
+#: security_mod.py:143
+msgid ""
+"\n"
+"Необходимо добавить хотя бы один сайт!\n"
+msgstr ""
+"\n"
+"Add at least one site!\n"
+
+#: security_mod.py:152
+msgid "Введите новый мастер пароль: "
+msgstr "Enter new master password: "
+
+#: security_mod.py:153
+msgid "Новый пароль не может быть пустой строкой!"
+msgstr "New password can't be empty!"
+
+#: security_mod.py:155
+msgid "Выполняется процесс обновления мастер пароля, пожалуйста, подождите..."
+msgstr "Master password update are going, please, wait ..."
+
+#: security_mod.py:174
+msgid ""
+"Мастер пароль обновлён успешно!\n"
+msgstr ""
+"Master password was succesfully updated!\n"
+

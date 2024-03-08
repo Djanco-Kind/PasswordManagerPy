@@ -1,11 +1,10 @@
-import os
-import datetime
-import ctypes
+from datetime import datetime, date
 import sources.sync_mod as sync_logic
 import sources.db_mod as db_logic
-import sources.input_mod as input_logic
+import sources.input_output_mod as io_logic
 import sources.security_mod as security
 from colorama import init, Fore, Style
+from sources.localization_mod import select_language
 
 if __name__ == "__main__":
 
@@ -13,21 +12,25 @@ if __name__ == "__main__":
     init(autoreset=True)
 
     while True:
+
+        _ = select_language("english-main")
+
         # ОСНОВНОЕ МЕНЮ для работы с парольным менеджером
-        user_choose = input_logic.input_helper(
-            ("(1) - Добавить логин/пароль для сайта\n"
-             "(2) - Получить логин/пароль сайта\n"
-             "(3) - Отредактировать информацию о сайте\n"
-             "(4) - Удалить информацию о сайте\n"
-             "(5) - Сгенерировать пароль\n"
-             "(6) - Очистить вывод\n"
-             "(7) - Синхронизация через Google Drive\n"
-             "(8) - Изменить мастер пароль\n"
-             "(9) - Выход\n"
-             "Введите номер действия: "),
-            "Действия с таким номером не существует!",
+        user_choose = io_logic.input_helper(
+            _("(1)  - Добавить логин/пароль для сайта\n"
+              "(2)  - Получить логин/пароль сайта\n"
+              "(3)  - Отредактировать информацию о сайте\n"
+              "(4)  - Удалить информацию о сайте\n"
+              "(5)  - Сгенерировать пароль\n"
+              "(6)  - Очистить вывод\n"
+              "(7)  - Синхронизация через Google Drive\n"
+              "(8)  - Изменить мастер пароль\n"
+              "(9)  - Посмотреть добавленные сайты\n"
+              "(10) - Выход\n"
+              "Введите номер действия: "),
+            _("Действия с таким номером не существует!"),
             "number",
-            range(1, 10)
+            range(1, 11)
         )
 
         try:
@@ -51,33 +54,33 @@ if __name__ == "__main__":
                 db_logic.db_worker(".//data//pswdmn.db", request_str, 1)
 
                 # получить от пользователя описание сохраняемого сайта
-                site_description = input_logic.input_helper(
-                    "\nВведите описание сайта: ",
-                    "Описание сайта не может быть пустой строкой!",
+                site_description = io_logic.input_helper(
+                    _("\nВведите описание сайта: "),
+                    _("Описание сайта не может быть пустой строкой!"),
                     "string"
                 )
 
                 # получить от пользователя URL сайта
                 # в формате http(s)://бла-бла.домен или http(s)://ip_address
-                site_url = input_logic.check_url_input()
+                site_url = io_logic.check_url_input()
 
                 # получить от пользователя почту для сайта, но это может быть и не задано
-                site_email = input(Fore.CYAN + "Введите email если используется: " + Style.RESET_ALL)
+                site_email = input(Fore.CYAN + _("Введите email если используется: ") + Style.RESET_ALL)
                 # если почта не используется, то сохранить это явно
                 if len(site_email) == 0:
-                    site_email = "На этом сайте адрес почты не используется"
+                    site_email = "Не указано"
 
                 # получить от пользователя ввод логина для сайта
-                site_login = input_logic.input_helper(
-                    "Введите логин для сайта: ",
-                    "Логин не может быть пустой строкой!",
+                site_login = io_logic.input_helper(
+                    _("Введите логин для сайта: "),
+                    _("Логин не может быть пустой строкой!"),
                     "string"
                 )
 
                 # получить от пользователя ввод пароля сайта
-                site_pass = input_logic.input_helper(
-                    "Введите пароль для сайта: ",
-                    "Пароль не может быть пустой строкой!",
+                site_pass = io_logic.input_helper(
+                    _("Введите пароль для сайта: "),
+                    _("Пароль не может быть пустой строкой!"),
                     "string"
                 )
 
@@ -88,7 +91,7 @@ if __name__ == "__main__":
                 crypto_result = security.aes_encryption(site_pass.encode(), master_pass)
 
                 # Epoch штамп времени, когда модифицировалась эта запись
-                mod_epoch = int(datetime.datetime.now().timestamp())
+                mod_epoch = int(datetime.now().timestamp())
 
                 # занесение информации о сайте в БД
                 request_str = ("INSERT INTO data ("
@@ -102,11 +105,11 @@ if __name__ == "__main__":
                                "ModificationTime) VALUES(?, ?, ?, ?, ?, ?, ?, ?)")
 
                 db_logic.db_worker(".//data//pswdmn.db", request_str, 2,
-                                    (site_description, site_url,
-                                     site_email, site_login, crypto_result[0], crypto_result[1],
-                                     datetime.date.today(), mod_epoch))
+                                   (site_description, site_url,
+                                    site_email, site_login, crypto_result[0], crypto_result[1],
+                                    date.today(), mod_epoch))
 
-                print(Fore.GREEN + "\nИнформация о сайте успешно добавлена!\n")
+                print(Fore.GREEN + _("\nИнформация о сайте успешно добавлена!\n"))
 
             # если пользователь выбрал получение сайта
             elif user_choose == "2":
@@ -118,15 +121,18 @@ if __name__ == "__main__":
                 # спрашиваем у пользователя ключевые слова и ищем по ним
                 found_results = db_logic.search_db_entries()
 
-                # если результаты пустые print_found_in_db вернёт True
-                # если результаты не пустые, то он напечатает их
-                if db_logic.print_found_in_db(found_results):
+                if len(found_results) == 0:
+                    print(Fore.YELLOW + _("\nРезультатов не найдено, "
+                                          "попробуйте поиск с другими ключевыми словами.\n"))
                     continue
+                else:
+                    print(_("\nНайдены следующие сайты:\n"))
+                    db_logic.print_db_entries(found_results)
 
                 # получаем расшифровку пароля и логин для определённого результата
-                user_choose = int(input_logic.input_helper(
-                    "Введите номер для получения пароля/логина/email: ",
-                    "Сайта с таким номером нет в результатах поиска!",
+                user_choose = int(io_logic.input_helper(
+                    _("Введите номер для получения пароля/логина/email: "),
+                    _("Сайта с таким номером нет в результатах поиска!"),
                     "number",
                     range(1, len(found_results) + 1)
                 ))
@@ -135,33 +141,34 @@ if __name__ == "__main__":
                 master_pass = security.check_master_pass()
                 # дешифруем с этим мастер паролем пароль сайта
                 site_pass = security.aes_decryption(found_results[user_choose - 1][5],
-                                                  master_pass,
-                                                  found_results[user_choose - 1][6])
+                                                    master_pass,
+                                                    found_results[user_choose - 1][6])
                 site_pass = site_pass.decode()
 
-                print(f"\nДанные сайта:\nЛогин: {found_results[user_choose - 1][4]} "
-                      f"\nПароль: {site_pass} "
-                      f"\nURL сайта: {found_results[user_choose - 1][2]} "
-                      f"\nEmail: {found_results[user_choose - 1][3]} \n")
+                print(_("\nДанные сайта:\nЛогин: "), f"{found_results[user_choose - 1][4]} ",
+                      _("\nПароль: "), f"{site_pass} ",
+                      _("\nURL сайта: "), f"{found_results[user_choose - 1][2]} "
+                                          f"\nEmail: {found_results[user_choose - 1][3]} \n")
 
                 # определяем как давно пользователь обновлял пароль
                 passMonths = security.calc_timedelta_month(
                     found_results[user_choose - 1][7],
-                    datetime.date.today())
+                    date.today())
                 # если прошло больше 3 месяцев выводим предупреждение
                 if passMonths > 3:
-                    print(Fore.YELLOW + f"Вы обновляли пароль для этого сайта {passMonths} месяцев назад.\n"
-                                        "Для безопасности рекомендуется обновить Ваш пароль.\n")
-                    user_choose = input_logic.input_helper(
-                        "Хотите сгенерировать новый пароль? Да - 1/Нет - 0 : ",
-                        "Выберите Да = 1 или Нет = 0",
+                    print(Fore.YELLOW + _("Вы обновляли пароль для этого сайта"), f"{passMonths}",
+                          _("месяцев назад.\n"),
+                          _("Для безопасности рекомендуется обновить Ваш пароль.\n"))
+                    user_choose = io_logic.input_helper(
+                        _("Хотите сгенерировать новый пароль? Да - 1/Нет - 0 : "),
+                        _("Выберите Да = 1 или Нет = 0"),
                         "number",
                         range(0, 2))
                     if user_choose == "1":
                         new_pass = security.pswrd_generator()
-                        print(f"\nСгенерированный пароль: {new_pass}\n")
-                        print(Fore.YELLOW + f"После смены пароля на сайте "
-                                            f"не забудьте обновить его здесь, через опцию (3).\n")
+                        print(_("\nСгенерированный пароль: "), f"{new_pass}\n")
+                        print(Fore.YELLOW + _("После смены пароля на сайте "),
+                              _("не забудьте обновить его здесь, через опцию (3).\n"))
                     else:
                         print("\n")
 
@@ -172,33 +179,36 @@ if __name__ == "__main__":
                 if not security.check_db_existence():
                     continue
 
-                print(Fore.YELLOW + "\nБудьте внимательны при внесении изменений!")
-                print("Выполните поиск сайта, который требуется отредактировать.")
+                print(Fore.YELLOW + _("\nБудьте внимательны при внесении изменений!"))
+                print(_("Выполните поиск сайта, который требуется отредактировать."))
 
                 # спрашиваем у пользователя какой сайт будем редактировать
                 found_results = db_logic.search_db_entries()
 
-                # если результаты пустые print_found_in_db вернёт True
-                # если результаты не пустые, то он напечатает их
-                if db_logic.print_found_in_db(found_results):
+                if len(found_results) == 0:
+                    print(Fore.YELLOW + _("\nРезультатов не найдено, "
+                                          "попробуйте поиск с другими ключевыми словами.\n"))
                     continue
+                else:
+                    print(_("\nНайдены следующие сайты:\n"))
+                    db_logic.print_db_entries(found_results)
 
                 # спрашиваем какую запись будем редактировать
-                site_id = int(input_logic.input_helper(
-                    "Введите номер сайта для редактирования: ",
-                    "Сайта с таким номером нет в результатах поиска!",
+                site_id = int(io_logic.input_helper(
+                    _("Введите номер сайта для редактирования: "),
+                    _("Сайта с таким номером нет в результатах поиска!"),
                     "number",
                     range(1, len(found_results) + 1)
                 ))
 
                 # спрашиваем что именно будем редактировать в записи сайта
-                edit_site_value = int(input_logic.input_helper(
-                    ("\nЧто именно требуется изменить для этого сайта?:\n"
-                     "(1) - Email\n"
-                     "(2) - Логин\n"
-                     "(3) - Пароль\n"
-                     "\nВведите номер действия: "),
-                    "Действия с таким номером нет!",
+                edit_site_value = int(io_logic.input_helper(
+                    "".join((_("\nЧто именно требуется изменить для этого сайта?:\n"),
+                             "(1) - Email\n",
+                             _("(2) - Логин\n"),
+                             _("(3) - Пароль\n"),
+                             _("\nВведите номер действия: "))),
+                    _("Действия с таким номером нет!"),
                     "number",
                     range(1, 4)
                 ))
@@ -206,7 +216,7 @@ if __name__ == "__main__":
                 # эти варианты можно просто переписать в БД никак не обрабатывая предварительно
                 request_str = ""
                 if edit_site_value == 1 or edit_site_value == 2:
-                    new_site_data = input(Fore.CYAN + "Введите новые данные: " + Style.RESET_ALL)
+                    new_site_data = input(Fore.CYAN + _("Введите новые данные: ") + Style.RESET_ALL)
                     if edit_site_value == 1:
                         request_str = "UPDATE data SET Email = ? WHERE Id = ?"
                     if edit_site_value == 2:
@@ -216,9 +226,9 @@ if __name__ == "__main__":
 
                 # новый пароль требуется предварительно зашифровать
                 elif edit_site_value == 3:
-                    site_pass = input_logic.input_helper(
-                        "Введите новый пароль для сайта: ",
-                        "Пароль не может быть пустой строкой!",
+                    site_pass = io_logic.input_helper(
+                        _("Введите новый пароль для сайта: "),
+                        _("Пароль не может быть пустой строкой!"),
                         "string"
                     )
 
@@ -230,14 +240,14 @@ if __name__ == "__main__":
                     request_str = "UPDATE data SET Pass = ?, Salt = ?, PasswordDate = ? WHERE Id = ?"
 
                     db_logic.db_worker(".//data//pswdmn.db", request_str, 2,
-                                        (crypto_result[0], crypto_result[1],
-                                         datetime.date.today(), found_results[site_id - 1][0]))
+                                       (crypto_result[0], crypto_result[1],
+                                        date.today(), found_results[site_id - 1][0]))
                 # после внесения изменений переопределяем значение ModificationTime
-                mod_epoch = int(datetime.datetime.now().timestamp())
+                mod_epoch = int(datetime.now().timestamp())
                 request_str = "UPDATE data SET ModificationTime = ? WHERE Id = ?"
-                db_logic.db_worker(".//data//pswdmn.db", request_str, 2,(mod_epoch, found_results[site_id - 1][0]))
+                db_logic.db_worker(".//data//pswdmn.db", request_str, 2, (mod_epoch, found_results[site_id - 1][0]))
 
-                print(Fore.GREEN + "\nДанные сайта успешно обновлены!\n")
+                print(Fore.GREEN + _("\nДанные сайта успешно обновлены!\n"))
 
             # если пользователь выбрал удаление сайта
             elif user_choose == "4":
@@ -246,21 +256,24 @@ if __name__ == "__main__":
                 if not security.check_db_existence():
                     continue
 
-                print(Fore.YELLOW + "\nУдаление необратимая операция, будьте внимательны!")
-                print("Выполните поиск сайта, который требуется удалить.")
+                print(Fore.YELLOW + _("\nУдаление необратимая операция, будьте внимательны!"))
+                print(_("Выполните поиск сайта, который требуется удалить."))
 
                 # спрашиваем у пользователя какой сайт будем редактировать
                 found_results = db_logic.search_db_entries()
 
-                # если результаты пустые search_db_helper вернёт True
-                # если результаты не пустые, то он напечатает их
-                if db_logic.print_found_in_db(found_results):
+                if len(found_results) == 0:
+                    print(Fore.YELLOW + _("\nРезультатов не найдено, "
+                                          "попробуйте поиск с другими ключевыми словами.\n"))
                     continue
+                else:
+                    print(_("\nНайдены следующие сайты:\n"))
+                    db_logic.print_db_entries(found_results)
 
                 # спрашиваем какой сайт будем удалять
-                site_id = int(input_logic.input_helper(
-                    "Введите номер сайта для удаления: ",
-                    "Сайта с таким номером нет в результатах поиска!",
+                site_id = int(io_logic.input_helper(
+                    _("Введите номер сайта для удаления: "),
+                    _("Сайта с таким номером нет в результатах поиска!"),
                     "number",
                     range(1, len(found_results) + 1)
                 ))
@@ -269,28 +282,16 @@ if __name__ == "__main__":
 
                 db_logic.db_worker(".//data//pswdmn.db", request_str, 2, (found_results[site_id - 1][0],))
 
-                print(Fore.GREEN + "Сайт успешно удалён.\n")
+                print(Fore.GREEN + _("Сайт успешно удалён.\n"))
 
             # если пользователь выбрал создать пароль
             elif user_choose == "5":
-                print(f"\nСгенерированный пароль: "
+                print(_("\nСгенерированный пароль: "),
                       f"{security.pswrd_generator()}\n")
 
             # если выбрали очистку экрана
             elif user_choose == "6":
-                if os.name == "nt":
-                    """
-                    Команда cls выполниться не в текущем shell, а в subshell.
-                    В текущем shell, где выполняется программа Python также произойдёт
-                    очистка консоли, т.к.: "If command generates any output,
-                    it will be sent to the interpreter standard output stream".
-                    """
-                    os.system("cls")
-                    # Загрузка библиотеки C++, которая отправит текущему окну
-                    # сочетание клавиш ALT F7 для очистки истории команд
-                    mylib = ctypes.CDLL(".//data//cpp_dll//altF7.dll")
-                    # Вызов функции отправки сочетания клавиш
-                    mylib.sendKeyPress()
+                io_logic.clear_console()
 
             # если пользователь выбрал синхронизацию
             elif user_choose == "7":
@@ -301,15 +302,47 @@ if __name__ == "__main__":
             elif user_choose == "8":
                 security.change_master_pass()
 
-            # если пользователь выбрал выход
+            # если пользователь выбрал обзор сайтов
             elif user_choose == "9":
+                io_logic.clear_console()
+                request_str = "SELECT COUNT(*) FROM data"
+                current_offset = 0
+                is_continued = True
+                num_of_entries = db_logic.db_worker(".//data//pswdmn.db", request_str, 1)[0][0]
+                request_str = "SELECT * FROM data LIMIT 10 OFFSET ?"
+                while (True):
+                    data = db_logic.db_worker(".//data//pswdmn.db", request_str, 2,
+                                              (current_offset,))
+                    db_logic.print_db_entries(data, current_offset)
+
+                    if current_offset + 10 < num_of_entries and current_offset == 0:
+                        print("Навигация: 'D' + enter Вперёд ->, Выход 'Q' + Enter")
+                        is_continued = True
+                    elif current_offset + 10 >= num_of_entries:
+                        print("Навигация: <- Назад 'A' + enter, Выход 'Q' + Enter")
+                        is_continued = False
+                    else:
+                        print("Навигация: <- Назад 'A' + enter, 'D' + enter Вперёд ->, Выход 'Q' + Enter")
+
+                    user_nav = input()
+                    if user_nav == "q" or user_nav == "Q":
+                        break
+                    elif (user_nav == "a" or user_nav == "A") and current_offset > 0:
+                        current_offset -= 10
+                    elif (user_nav == "d" or user_nav == "D") and is_continued:
+                        current_offset += 10
+                    io_logic.clear_console()
+                io_logic.clear_console()
+
+            # если пользователь выбрал выход
+            elif user_choose == "10":
                 break
 
         except KeyboardInterrupt:
             # если пользователь отменяет своё действие
             # напечатать строку для удобства и пропустить итерацию
-            print(Fore.YELLOW + "\nВы прервали операцию нажав Ctrl+C...\n")
+            print(Fore.YELLOW + _("\nВы прервали операцию нажав Ctrl+C...\n"))
             continue
         except Exception as e:
-            print(Fore.RED + f"\nВозникла непредвиденная ошибка: {str(e)}\n")
+            print(Fore.RED + _("\nВозникла непредвиденная ошибка: "), f"{str(e)}\n")
             continue

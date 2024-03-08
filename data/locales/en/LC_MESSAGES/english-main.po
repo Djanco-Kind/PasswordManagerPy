@@ -1,0 +1,303 @@
+# ENGLISH TRANSLATION FOR PasswordManager - main module.
+# Copyright (C) 2024 Herman
+
+msgid ""
+msgstr ""
+
+"POT-Creation-Date: 2024-02-29 19:03+0300\n"
+"Last-Translator: Herman\n"
+"Language-Team: English"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: passwordManager.py:22
+msgid ""
+"(1)  - Добавить логин/пароль для сайта\n"
+"(2)  - Получить логин/пароль сайта\n"
+"(3)  - Отредактировать информацию о сайте\n"
+"(4)  - Удалить информацию о сайте\n"
+"(5)  - Сгенерировать пароль\n"
+"(6)  - Очистить вывод\n"
+"(7)  - Синхронизация через Google Drive\n"
+"(8)  - Изменить мастер пароль\n"
+"(9)  - Посмотреть добавленные сайты\n"
+"(10) - Выход\n"
+"Введите номер действия: "
+
+msgstr ""
+"(1)  - Add new credentials for site\n"
+"(2)  - Get credentials for site\n"
+"(3)  - Edit sites credentials\n"
+"(4)  - Delete sites credentials\n"
+"(5)  - Generate password\n"
+"(6)  - Clear output\n"
+"(7)  - Synchronize data via Google Drive\n"
+"(8)  - Change master password\n"
+"(9)  - View added sites\n"
+"(10) - Exit\n"
+"Enter action number: "
+
+#: passwordManager.py:33
+msgid "Действия с таким номером не существует!"
+
+msgstr "There is no action with this number!"
+
+#: passwordManager.py:60
+msgid ""
+"\n"
+"Введите описание сайта: "
+
+msgstr ""
+"\n"
+"Enter site description: "
+
+#: passwordManager.py:61
+msgid "Описание сайта не может быть пустой строкой!"
+
+msgstr "Site's description can't be empty!"
+
+#: passwordManager.py:70
+msgid "Введите email если используется: "
+
+msgstr "Enter site's email if used: "
+
+#: passwordManager.py:77
+msgid "Введите логин для сайта: "
+
+msgstr "Enter site's login: "
+
+#: passwordManager.py:78
+msgid "Логин не может быть пустой строкой!"
+
+msgstr "Site's login can't be empty!"
+
+#: passwordManager.py:84
+msgid "Введите пароль для сайта: "
+
+msgstr "Enter site's password: "
+
+#: passwordManager.py:85 passwordManager.py:227
+msgid "Пароль не может быть пустой строкой!"
+
+msgstr "Site's password can't be empty!"
+
+#: passwordManager.py:114
+msgid ""
+"\n"
+"Информация о сайте успешно добавлена!\n"
+
+msgstr ""
+"\n"
+"New site successfully added!\n"
+
+#: passwordManager.py:133
+msgid "Введите номер для получения пароля/логина/email: "
+
+msgstr "Enter number for get site's details - login/password: "
+
+#: passwordManager.py:134 passwordManager.py:195 passwordManager.py:269
+msgid "Сайта с таким номером нет в результатах поиска!"
+
+msgstr "Site with given number not found!"
+
+#: passwordManager.py:147
+msgid ""
+"\n"
+"Данные сайта:\n"
+"Логин: "
+
+msgstr ""
+"\n"
+"Site's details:\n"
+"Login: "
+
+#: passwordManager.py:148
+msgid ""
+"\n"
+"Пароль: "
+
+msgstr ""
+"\n"
+"Password: "
+
+#: passwordManager.py:149
+msgid ""
+"\n"
+"URL сайта: "
+
+msgstr ""
+"\n"
+"URL address: "
+
+#: passwordManager.py:158
+msgid "Вы обновляли пароль для этого сайта"
+
+msgstr "You updated password"
+
+#: passwordManager.py:159
+msgid ""
+"месяцев назад.\n"
+
+msgstr ""
+"month ago.\n"
+
+#: passwordManager.py:160
+msgid ""
+"Для безопасности рекомендуется обновить Ваш пароль.\n"
+
+msgstr ""
+"Please, update your password for security purposes.\n"
+
+#: passwordManager.py:162
+msgid "Хотите сгенерировать новый пароль? Да - 1/Нет - 0 : "
+
+msgstr "Do you want generate new password right now? Yes - 1/No - 0: "
+
+#: passwordManager.py:163
+msgid "Выберите Да = 1 или Нет = 0"
+
+msgstr "Choose Yes = 1 or No = 0"
+
+#: passwordManager.py:168 passwordManager.py:282
+msgid ""
+"\n"
+"Сгенерированный пароль: "
+
+msgstr ""
+"\n"
+"Generated password: "
+
+#: passwordManager.py:169
+msgid "После смены пароля на сайте "
+
+msgstr "After changing the password, don't forget to update it here, "
+
+#: passwordManager.py:170
+msgid ""
+"не забудьте обновить его здесь, через опцию (3).\n"
+
+msgstr ""
+"you can do it via option (3).\n"
+
+#: passwordManager.py:181
+msgid ""
+"\n"
+"Будьте внимательны при внесении изменений!"
+
+msgstr ""
+"\n"
+"Please, be careful while making changes!"
+
+#: passwordManager.py:182
+msgid "Выполните поиск сайта, который требуется отредактировать."
+
+msgstr "Find site what you want to modify."
+
+#: passwordManager.py:194
+msgid "Введите номер сайта для редактирования: "
+
+msgstr "Enter the site number for modification: "
+
+#: passwordManager.py:202
+msgid ""
+"\n"
+"Что именно требуется изменить для этого сайта?:\n"
+
+msgstr ""
+"\n"
+"What exactly will you change?:\n"
+
+#: passwordManager.py:204
+msgid ""
+"(2) - Логин\n"
+
+msgstr ""
+"(2) - Login\n"
+
+#: passwordManager.py:205
+msgid ""
+"(3) - Пароль\n"
+
+msgstr ""
+"(3) - Password\n"
+
+#: passwordManager.py:206
+msgid ""
+"\n"
+"Введите номер действия: "
+
+msgstr ""
+"\n"
+"Enter action number: "
+
+#: passwordManager.py:207
+msgid "Действия с таким номером нет!"
+
+msgstr "There is no action with this number!"
+
+#: passwordManager.py:215
+msgid "Введите новые данные: "
+
+msgstr "Please, enter new data: "
+
+#: passwordManager.py:226
+msgid "Введите новый пароль для сайта: "
+
+msgstr "Enter new password: "
+
+#: passwordManager.py:246
+msgid ""
+"\n"
+"Данные сайта успешно обновлены!\n"
+
+msgstr ""
+"\n"
+"Site's data successfully updated!\n"
+
+#: passwordManager.py:255
+msgid ""
+"\n"
+"Удаление необратимая операция, будьте внимательны!"
+
+msgstr ""
+"\n"
+"Deletion is operation without cancellation! Please, be careful."
+
+#: passwordManager.py:256
+msgid "Выполните поиск сайта, который требуется удалить."
+
+msgstr "Please, find site what you want to delete."
+
+#: passwordManager.py:268
+msgid "Введите номер сайта для удаления: "
+
+msgstr "Enter site's number for deletion: "
+
+#: passwordManager.py:278
+msgid ""
+"Сайт успешно удалён.\n"
+
+msgstr ""
+"Site successfully deleted.\n"
+
+#: passwordManager.py:321
+msgid ""
+"\n"
+"Вы прервали операцию нажав Ctrl+C...\n"
+
+msgstr ""
+"\n"
+"You abort operation by pressing Ctrl+C...\n"
+
+#: passwordManager.py:324
+msgid ""
+"\n"
+"Возникла непредвиденная ошибка: "
+
+msgstr ""
+"\n"
+"Something went wrong, here additional info: "
+

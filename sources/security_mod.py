@@ -1,4 +1,3 @@
-import datetime
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -6,9 +5,10 @@ from os import urandom, path
 from base64 import urlsafe_b64encode
 from secrets import choice
 from colorama import init, Fore, Style
-from datetime import date
-from sources.input_mod import input_helper
+from datetime import date, datetime
+from sources.input_output_mod import input_helper
 from sources.db_mod import db_worker
+from sources.localization_mod import select_language
 
 """
 Этот модуль содержит логику работы с шифрованием и безопасностью.
@@ -16,6 +16,8 @@ from sources.db_mod import db_worker
 
 # Colorama.Initialize() для цветного форматирования в консоли
 init(autoreset=True)
+
+_ = select_language("english-security_mod")
 
 
 def aes_key_derivation(salt: bytes, key: str) -> bytes:
@@ -66,9 +68,9 @@ def pswrd_generator() -> str:
     Метод генерирует пароль заданной длины.
     """
     pass_length = int(input_helper(
-        "Введите длину пароля: ",
-        "Недопустимая длина."
-        "\nДлина должна быть в диапазоне 8 - 128 символов",
+        _("Введите длину пароля: "),
+        _("Недопустимая длина."
+          "\nДлина должна быть в диапазоне 8 - 128 символов"),
         "number",
         range(8, 129)
     ))
@@ -89,22 +91,22 @@ def check_master_pass() -> str:
     """
     while True:
         # colorama autoreset не работает для input
-        master_pass = input(Fore.CYAN + "Введите мастер пароль для базы: " + Style.RESET_ALL)
+        master_pass = input(Fore.CYAN + _("Введите мастер пароль для базы: ") + Style.RESET_ALL)
 
         # запрос для получения хеша мастер пароля
         request_str = "SELECT Value FROM control"
 
         # если в БД нет хеша мастер пароля, то сохраняем его
         if len(db_worker(".//data//pswdmn.db", request_str, 1)) == 0:
-            print(Fore.YELLOW + "\nВы задали мастер пароль в самый первый раз,"
-                                "\nзапомните его, он нужен для последующего использования парольного менеджера.")
+            print(Fore.YELLOW + _("\nВы задали мастер пароль в самый первый раз,"
+                                  "\nзапомните его, он нужен для последующего использования парольного менеджера."))
             request_str = "INSERT INTO control (Value) VALUES(?)"
             db_worker(".//data//pswdmn.db", request_str, 2, (hash_sha256(master_pass.encode()),))
             break
 
         # иначе сравниваем, что пытаемся шифровать/дешифровать с тем же мастер паролем
         if db_worker(".//data//pswdmn.db", request_str, 1)[0][0] != hash_sha256(master_pass.encode()):
-            print(Fore.RED + "\nНеправильный мастер пароль!\n")
+            print(Fore.RED + _("\nНеправильный мастер пароль!\n"))
             continue
         else:
             break
@@ -139,7 +141,7 @@ def check_db_existence() -> bool:
     """
     is_exist = False
     if not path.exists(".//data//pswdmn.db"):
-        print(Fore.RED + "\nНеобходимо добавить хотя бы один сайт!\n")
+        print(Fore.RED + _("\nНеобходимо добавить хотя бы один сайт!\n"))
     else:
         is_exist = True
     return is_exist
@@ -148,10 +150,10 @@ def check_db_existence() -> bool:
 def change_master_pass():
     print("")
     old_master_password = check_master_pass()
-    new_master_pass = input_helper("Введите новый мастер пароль: ",
-                                   "Новый пароль не может быть пустой строкой!",
+    new_master_pass = input_helper(_("Введите новый мастер пароль: "),
+                                   _("Новый пароль не может быть пустой строкой!"),
                                    "string")
-    print("Выполняется процесс обновления мастер пароля, пожалуйста, подождите...")
+    print(_("Выполняется процесс обновления мастер пароля, пожалуйста, подождите..."))
     # получаем все пароли из БД, которые зашифрованы старым мастер паролем
     request_str = "Select Id, Pass, Salt from data"
     sites_passwords = db_worker(".//data//pswdmn.db", request_str, 1)
@@ -164,10 +166,10 @@ def change_master_pass():
         db_worker(".//data//pswdmn.db", request_str, 2,
                   (password[0], password[1], id_password_enc[0]))
         # после внесения изменений переопределяем значение ModificationTime
-        mod_epoch = int(datetime.datetime.now().timestamp())
+        mod_epoch = int(datetime.now().timestamp())
         request_str = "UPDATE data SET ModificationTime = ? WHERE Id = ?"
         db_worker(".//data//pswdmn.db", request_str, 2, (mod_epoch, id_password_enc[0]))
 
     request_str = "UPDATE control SET Value=?"
     db_worker(".//data//pswdmn.db", request_str, 2, (hash_sha256(new_master_pass.encode()),))
-    print(Fore.GREEN + "Мастер пароль обновлён успешно!\n")
+    print(Fore.GREEN + _("Мастер пароль обновлён успешно!\n"))
