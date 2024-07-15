@@ -1,10 +1,11 @@
 import os
+import re
 from time import sleep
 from subprocess import Popen, STDOUT
 from colorama import init, Fore, Style
 from sources.db_mod import db_worker
 from sources.input_output_mod import input_helper
-from sources.config_mod import config_read_helper
+from sources.config_mod import config_read_helper, config_set_helper
 from sources.security_mod import check_master_pass, hash_sha256, aes_decryption, aes_encryption
 from sources.localization_mod import select_language
 
@@ -64,7 +65,7 @@ def sync_db_main():
         if os.path.isfile("GoogleDriveFS.exe"):
             # запускаем клиента GDrive
             with open(os.devnull, "w") as f:
-               Popen(["GoogleDriveFS.exe"], stdout=f, stderr=STDOUT)
+                Popen(["GoogleDriveFS.exe"], stdout=f, stderr=STDOUT)
             # ждём 3 секунды пока он запустится
             sleep(3)
         else:
@@ -202,3 +203,21 @@ def sync_db_main():
                                       "Сначала выполните выгрузку шифрованной копии.\n"))
     else:
         print(Fore.RED + _("\nОшибка. Потерян файл конфигурации settings.ini, проверьте файл в папке data\\config\n"))
+
+
+def find_gdrive_path():
+    if os.name == "nt":
+        path = os.path.expandvars("%systemdrive%") + r"\Program Files\Google\Drive File Stream"
+        current_ver_folder = ""
+        pattern = r"^\d+\.\d+\.\d+\.\d+$"
+        for folder in os.listdir(path):
+            if re.match(pattern, folder):
+                maxnum = 0
+                cur = 0
+                for num in folder.split("."):
+                    cur += int(num)
+                if cur > maxnum:
+                    maxnum = cur
+                    current_ver_folder = folder
+        path += "\\" + current_ver_folder
+        config_set_helper("SyncViaGoogle", "executable", path)

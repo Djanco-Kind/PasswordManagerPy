@@ -117,18 +117,18 @@ def print_db_entries(entries: list, offset=0):
             if offset == 0 and wrapped_res_line_indx == 0:
                 print(out_string.format(index + 1, wrapped_data[0][wrapped_res_line_indx],
                                         wrapped_data[1][wrapped_res_line_indx],
-                                        wrapped_data[2][wrapped_res_line_indx],
-                                        wrapped_data[3][wrapped_res_line_indx]))
+                                        wrapped_data[3][wrapped_res_line_indx],
+                                        wrapped_data[2][wrapped_res_line_indx]))
             elif offset > 0 and wrapped_res_line_indx == 0:
                 print(out_string.format(index + 1 + offset, wrapped_data[0][wrapped_res_line_indx],
                                         wrapped_data[1][wrapped_res_line_indx],
-                                        wrapped_data[2][wrapped_res_line_indx],
-                                        wrapped_data[3][wrapped_res_line_indx]))
+                                        wrapped_data[3][wrapped_res_line_indx],
+                                        wrapped_data[2][wrapped_res_line_indx]))
             elif wrapped_res_line_indx > 0:
                 print(out_string.format("", wrapped_data[0][wrapped_res_line_indx],
                                         wrapped_data[1][wrapped_res_line_indx],
-                                        wrapped_data[2][wrapped_res_line_indx],
-                                        wrapped_data[3][wrapped_res_line_indx]))
+                                        wrapped_data[3][wrapped_res_line_indx],
+                                        wrapped_data[2][wrapped_res_line_indx]))
         # для разделения выводимых записей вывести границу
         if index < len(entries):
             print("+", "─" * (out_string_len - 4), "+")

@@ -295,6 +295,8 @@ if __name__ == "__main__":
 
             # если пользователь выбрал синхронизацию
             elif user_choose == "7":
+                # пытаемся найти путь до клиента Gdrive
+                sync_logic.find_gdrive_path()
                 # вызываем синхронизацию
                 sync_logic.sync_db_main()
 
